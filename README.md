@@ -21,52 +21,52 @@ There are two suported formats for chords in songs.
 Chords on a seperate line
 -------------------------
 
-{title:House of the rising sun}
- 
-{//:This is a comment and so is the "Intro:" text on the next line.}
-{//:Intro:} Am C D F Am E Am E
-
-{//:This verse is written in the common "chords on seperate lines notation}
-      Am   C        D           F
-There is a house in New Orleans
-     Am       C      E   E
-They call the Risin' Sun
-         Am       C       D           F
-And it's been the ruin of many a poor boy.
-    Am     E        Am
-And God, I know I'm one.
-{//:These passing chord are put in a named block, which is reused after the next verse}
-{start:passing}
-C D F Am E Am E
-{end:}
-
-   Am     C     D           F
-My mother was a tailor.
-    Am       C        E     E
-She sewed my new blue jeans.
-   Am     C     D        F
-My father was a gamblin' man
-Am      E      Am
-Down in New Or-leans.
-{insert:passing}
-
-{//:Skipped the remaining verse}
-
-{|:rep fade}
-C D F Am E 
-Am D
+    {title:House of the rising sun}
+     
+    {//:This is a comment and so is the "Intro:" text on the next line.}
+    {//:Intro:} Am C D F Am E Am E
+    
+    {//:This verse is written in the common "chords on seperate lines notation}
+          Am   C        D           F
+    There is a house in New Orleans
+         Am       C      E   E
+    They call the Risin' Sun
+             Am       C       D           F
+    And it's been the ruin of many a poor boy.
+        Am     E        Am
+    And God, I know I'm one.
+    {//:These passing chord are put in a named block, which is reused after the next verse}
+    {start:passing}
+    C D F Am E Am E
+    {end:}
+    
+       Am     C     D           F
+    My mother was a tailor.
+        Am       C        E     E
+    She sewed my new blue jeans.
+       Am     C     D        F
+    My father was a gamblin' man
+    Am      E      Am
+    Down in New Or-leans.
+    {insert:passing}
+    
+    {//:Skipped the remaining verse}
+    
+    {|:rep fade}
+    C D F Am E 
+    Am D
 
 
 Inline chords
 -------------
 
-{title:House of the rising sun}
- 
-{//:This verse is written in CRD inline format}
-My [Am]mother [C]was a [D]tailor. [F]
-She [Am]sewed my [C]new blue [E]jeans. [E]
-My [Am]father [C]was a [D]gamblin' [F]man
-[Am]Down in [E]New Or-[Am]leans. [E]
+    {title:House of the rising sun}
+     
+    {//:This verse is written in CRD inline format}
+    My [Am]mother [C]was a [D]tailor. [F]
+    She [Am]sewed my [C]new blue [E]jeans. [E]
+    My [Am]father [C]was a [D]gamblin' [F]man
+    [Am]Down in [E]New Or-[Am]leans. [E]
 
 
 How to use
