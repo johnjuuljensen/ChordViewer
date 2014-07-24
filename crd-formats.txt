@@ -1,0 +1,55 @@
+http://en.wikipedia.org/wiki/Guitar_chord_file_format
+
+CRD Directives
+
+General format:
+{directive:parameters}
+
+Supported directives:
+
+start, begin
+Desc: Starts a new named section. Sections cannot be nested. A named section must end with an 'end' directive. Named blocks can be redefined, so if the chorus changes, then it can be redefined and later repeats will use the new definition.
+Ex: {start:chorus}
+
+end
+Desc: Ends a named section. The directive parameters are ignored.
+Ex: {end:} 
+
+reference, include, insert
+Desc: inserts a copy of a named section.
+Ex: {insert:chorus}
+
+|, repeat
+Desc: Marks the following section as to be repeated. The '|' directive key was chosen because in normal sheet music repeat is written as '|:', which fits nicely with the directive syntax. 
+Ex: {|:x3} 
+
+
+//, comment, note
+Desc: Use for comments.
+Ex: {//:Some comment}
+
+
+CRD proposed directives
+{title:}
+
+{subtitle:}
+
+{artist:}
+
+{end}
+No colon.
+No further processing after this directive. Notes, comments etc. can be placed after this directive.
+
+{start_of_chorus}{end_of_chorus}
+These seem like weird non-generic directives, not very useful.
+
+{start:}{end:}
+Example: {start:chorus}{end:chorus}
+Defines a named block. 
+Nested blocks are not allowed.
+End block need not include the name, but must include the colon.
+Named blocks can be redefined, so if the chorus changes, then it can be redefined and later repeats will use the new definition.
+
+{repeat:}
+Example: {repeat:chorus}
+Repeat the content from a previous start/end directive pair.

@@ -1,0 +1,585 @@
+﻿<!DOCTYPE html>
+<!--
+Copyright (c) 2014, John J. Jensen <john.juul.jensen@hotmail.com>
+
+Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, 
+provided that the above copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, 
+OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, 
+    NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+-->
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+	<link rel="icon" 
+      type="image/png" 
+      href="guitar.png">
+    <title></title>
+    <style>
+        body {
+            font-family: Calibri, sans-serif;
+            font-size: 100%;
+        }
+
+        .reading-canvas {
+            font-size: 150%;
+            padding: 1em;
+            max-width: none;
+            height: 90vh;
+
+            -moz-column-fill: auto;
+            -moz-column-width: 25em;
+            -moz-column-gap: 3rem;
+            -moz-box-sizing: border-box;
+
+            column-fill: auto;
+            column-count: 2;
+            column-gap: 3rem;
+            column-rule-style: solid;
+            column-rule-width: 1px;
+            column-rule-color: white;
+            box-sizing: border-box;
+     
+            -webkit-column-fill: auto;
+            -webkit-column-count: 2;
+            -webkit-column-width: 25em;
+            -webkit-column-gap: 3rem;
+            -webkit-column-rule-style: solid;
+            -webkit-column-rule-width: 1px;
+            -webkit-column-rule-color: white;
+            -webkit-box-sizing: border-box;
+        }
+
+        .section {
+           -webkit-column-break-inside:avoid;
+            -moz-column-break-inside:avoid;
+            column-break-inside:avoid;
+            margin-bottom:1.5em;
+            padding-left: 0.2em;
+        }
+
+        div.repeatedSection {
+           -webkit-column-break-inside:avoid;
+            -moz-column-break-inside:avoid;
+            column-break-inside:avoid;
+            border-left: 2px solid gold;
+
+        }
+
+        span.repeatedSection {
+            font-size: 75%
+        }
+
+        .raisedChord {
+            display: inline-flex;
+            display: -ms-inline-grid;
+            margin-bottom: 0.9em;
+            width: 0px;
+        }
+
+        .chord {
+            color: blue;
+            font-size:90%;
+        }
+
+        .collapsedChords {
+        }
+
+        .inplaceChord {
+        }
+
+        .songline {
+            position: relative;
+            vertical-align: bottom;
+        }
+
+        note {
+            color: lightgreen;
+            vertical-align: bottom;
+        }
+
+        .display-control {
+            padding-right: 1em;
+        }
+
+        pre {
+            font-family: Consolas;
+        }
+    </style>
+
+    <script type="text/javascript">
+        function OnLoad() {
+            // Check for the various File API support.
+            if (window.File && window.FileReader && window.FileList && window.Blob) {
+                // Great success! All the File APIs are supported.
+            } else {
+                alert('The File APIs are not fully supported in this browser.');
+            }
+
+            document.getElementById('files').addEventListener('change', handleFileSelect, false);
+
+
+            DisplaySong( [
+'{title:Hestevisen}',
+'{artist:Magtens Korridor}',
+'   ',
+'{//:comment:}   ',
+'{//:inlinecomment:}[G]Op på [D]hesten og [Am]langt ud i [Em]skoven ',
+'[G]rider du a[D]lene på din [Am]hest [C] ',
+'[G]bange, du [D]vender dig om og ser til[Am]bage, aaa[Em]haaa',
+'[G]er jeg a[D]lene med min [Am]hest?  [C]',
+'for',
+'',
+'[G]     [D]           [Am]      [Em]      ',
+'[G]     [D]           [Am]      [Em]      ',
+'',
+'hej',
+'dav',
+'',
+'{|:x2}{start:omkvæd}',
+'[G]Anne-[D]Grethe, du [Am]er en [Em]luder ',
+'[G]Anne-[D]Grethe, en [Am]heste[Em]luder ',
+'[G]Anne-[D]Grethe, du [Am]er en [Em]luder ',
+'[G]Anne-[D]Grethe, en [Am]heste[Em]luder ',
+'{end:omkvæd}',
+'',
+'',
+'',
+'[G]Væk fra [D]festen og [Am]langt ud i [Em]skoven ',
+'[G]flygter du a[D]lene med din [Am]hest [C]',
+'[G]grødkvalt, du [D]vender dig om og ser til[Am]bage [Em]',
+'[G]HURRA! -jeg er a[D]lene med min [Am]hingst, hingst, [C]hingst, hingst',
+'',
+'{|:x3}{repeat:omkvæd}'].join("\n"));
+        }
+
+        var songsLoaded = {};
+        var currentSongKey;
+        var chordMode = "in place";
+        var transposeOffset = 0;
+        var allChords = ["A", "B", "C", "D", "E", "F", "G"];
+
+        function handleFileSelect(evt) {
+            var files = evt.target.files; // FileList object
+
+            var selSongs = document.getElementById('selSongs');
+            selSongs.innerHTML = "<option></option>";
+
+
+            // files is a FileList of File objects. List some properties.
+            songsLoaded = {};
+            var output = [];
+            for (var i = 0, f; f = files[i]; i++) {
+                var reader = new FileReader();
+
+                // Closure to capture the file information.
+                reader.onload = (function (theFile) {
+                    return function (e) {
+                        songsLoaded[theFile.name] = e.target.result;
+
+                        var opt = document.createElement('option');
+                        opt.value = theFile.name;
+                        opt.innerHTML = theFile.name;
+                        selSongs.appendChild(opt);
+
+                    };
+                })(f);
+
+                reader.readAsText(f);
+            }
+        }
+
+        function OnTransposeSelected(offset) {
+            transposeOffset = parseInt(offset);
+
+            var songText = songsLoaded[currentSongKey];
+            var song = ParseSong(songText);
+
+            DisplaySong(song);
+        }
+
+        function OnSongSelected(songKey) {
+            currentSongKey = songKey;
+            var songText = songsLoaded[songKey];
+            var song = ParseSong(songText);
+
+            var selTransposeOffset = document.getElementById('selTransposeOffset');
+            selTransposeOffset.innerHTML = "<option value='0'></option>";
+            transposeOffset = 0;
+
+            if (song.firstChord) {
+                var firstBaseChord = song.firstChord.value[0];
+                var firstChordIndex = allChords.indexOf(firstBaseChord);
+                for (var i = 1; i < allChords.length; ++i) {
+                    var opt = document.createElement('option');
+                    opt.value = i;
+                    opt.innerHTML = firstBaseChord + "->" + allChords[(firstChordIndex + i) % allChords.length];
+                    selTransposeOffset.appendChild(opt);
+                }
+            }
+
+            DisplaySong(song);
+        }
+
+        function Song()
+        {
+            this.directives = {};
+            this.namedSections = {};
+            this.sections = [];
+            this.firstChord = null;
+
+            this.lastSection = function() {
+                return this.sections[this.sections.length-1];
+            }
+        }
+
+        function VerseLine(section,rawLine,comment) {
+            this.section = section;
+            this.chords = [];
+            this.rawLine = rawLine;
+            this.lyrics = null;
+            this.comment = comment;
+            this.nextLine = null;
+        }
+
+        function Chord(value, index) {
+            this.value = value;
+            this.index = index;
+        }
+
+        function Section(song, repeatValue) {
+            this.song = song;
+            this.verseLines = [];
+            this.repeatValue = repeatValue;
+
+            this.includeSection = function (sectionToInclude) {
+                sectionToInclude.verseLines.forEach(function (v) {
+                    this.verseLines.push(v);
+                }, this);
+            }
+
+            this
+        }
+
+
+
+        function ParseLine(rawLine, currentSection, comment) {
+            rawLine = rawLine.replace(/\s+$/, "").replace(/^\s+$/, "");
+
+            var repeatValue = null;
+
+            var directivesRegex = /{([^:]+)(?::(.*?))?}/g,
+                directiveMatch = null,
+                directives = [];
+
+            while (directiveMatch = directivesRegex.exec(rawLine)) {
+                var key = directiveMatch[1],
+                    value = true;
+                if ( directiveMatch.length>2){
+                    value = directiveMatch[2];
+                }
+                directives.push({ key:key, value:value });
+            }
+
+            rawLine = rawLine.replace(directivesRegex, "");
+
+            var nextSection = currentSection;
+            for ( var i = 0; i < directives.length; i++ )
+            {
+                var key = directives[i].key;
+                var value = directives[i].value;
+
+                switch (key) {
+                    case "start":
+                    case "begin":
+                        nextSection = currentSection.song.namedSections[value] = new Section(currentSection.song);
+                        break;
+                    case "end":
+                        {
+                            var lastSection = currentSection.song.lastSection();
+                            lastSection.includeSection(currentSection);
+                            nextSection = lastSection;
+                        }
+                        break;
+                    case "reference":
+                    case "include":
+                    case "insert":
+                        var sectionToInclude = currentSection.song.namedSections[value];
+                        if (sectionToInclude) {
+                            currentSection.includeSection(sectionToInclude);
+                        }
+                        break;
+                    case "repeat":
+                    case "|":
+                        if (rawLine.length == 0) {
+                            currentSection.repeatValue = value;
+                        }
+                        break;
+                    case "//":
+                    case "comment":
+                    case "note":
+                        comment = value;
+                        break;
+                    default:
+                        currentSection.song.directives[key] = value;
+                        break;
+                }
+            }
+
+            currentSection = nextSection;
+
+
+            if (rawLine.length == 0 && !comment) {
+                if (directives.length == 0 && currentSection.verseLines.length > 0 && !currentSection.name) {
+                    currentSection = new Section(currentSection.song);
+                    currentSection.song.sections.push(currentSection);
+                }
+
+                return currentSection;
+            }
+
+            var verseLine = new VerseLine(currentSection,rawLine,comment);
+
+            if (currentSection.verseLines.length) {
+                var lastLine = currentSection.verseLines[currentSection.verseLines.length - 1];
+                lastLine.nextLine = verseLine;
+            }
+
+            currentSection.verseLines.push(verseLine);
+
+            var chordsRegex = /\[(.*?)\]/g,
+                chordMatch = null;
+
+            while (chordMatch = chordsRegex.exec(rawLine)) {
+                chordsRegex.lastIndex -= chordMatch[0].length;
+                var chord = new Chord(chordMatch[1], chordMatch.index);
+                verseLine.chords.push(chord);
+                rawLine = rawLine.substr(0, chord.index) + rawLine.substr(chord.index + chord.value.length + 2);
+                if (!currentSection.song.firstChord) {
+                    currentSection.song.firstChord = chord;
+                }
+            }
+
+            verseLine.lyrics = rawLine; // rawLine.replace(/\[(.*?)\]/gi, "");
+
+            return currentSection;
+        }
+
+
+
+        function ConvertSectionToCRD( section ) {
+            var resultSection = new Section( section.song, section.repeatValue);
+
+            var lineCount = section.verseLines.length;
+            for (var lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+                var chordsRegex = /\b(([A-H](maj|sus2|sus4|#|♯|m|5|7|b|♭|\*)*)(\/)?)+(?=\s|$)/g,
+                    chordMatch = null,
+                    verseLine = section.verseLines[lineIndex];
+
+                var chordMatches = verseLine.chordMatches = [];
+
+                while (chordMatch = chordsRegex.exec(verseLine.rawLine)) {
+                    chordMatches.push(chordMatch);
+                }
+            }
+
+            for (var lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+                var verseLine = section.verseLines[lineIndex];
+                var rawLine = verseLine.rawLine;
+
+                var crdLine = verseLine.rawLine;
+                if (verseLine.chordMatches.length > 0 ) {
+                    var lyricsLine = " ";
+                    if (verseLine.nextLine != null && verseLine.nextLine.chordMatches.length == 0) {
+                        var lyricsLine = verseLine.nextLine.rawLine;
+                        lineIndex++;
+                    }
+
+                    while (lyricsLine.length < verseLine.rawLine.length) {
+                        lyricsLine += " ";
+                    }
+
+                    crdLine = verseLine.chordMatches.reverse().reduce(function (crdLine, chordMatch) {
+                        var before = crdLine.substr(0, chordMatch.index);
+                        var after = crdLine.substr(chordMatch.index);
+                        var systemChord = chordMatch[0];
+                        //systemChord = systemChord.replace("H", "B");
+
+
+                        //var chordIndex = allChords.indexOf(systemChord[0]);
+                        //if ( chordIndex >= 0 ) {
+                        //    systemChord = systemChord.replace(systemChord[0], allChords[(chordIndex + transposeOffset) % allChords.length]);
+                        //}
+
+                        return before + "[" + systemChord + "]" + after;
+                    }, lyricsLine);
+                }
+
+                ParseLine( crdLine, resultSection, verseLine.comment );
+            }
+
+            return resultSection;
+        }
+
+        function ParseSong(rawSong) {
+            var song = new Song();
+
+            var currentSection = new Section(song);
+            song.sections.push(currentSection);
+
+            rawSong.split("\n").forEach(function (e) {
+                currentSection = ParseLine(e, currentSection);
+            });
+
+            var totalChords = song.sections.reduce(function (songChordCount, section) {
+                return songChordCount + section.verseLines.reduce(function (sectionChordCount, verseLine) {
+                    return sectionChordCount + verseLine.chords.length;
+                }, 0);
+            }, 0);
+
+            if (totalChords == 0) {
+                // Assume that chords are on seperate line
+                for (var sectionIndex = 0; sectionIndex < song.sections.length; sectionIndex++) {
+                    song.sections[sectionIndex] = ConvertSectionToCRD(song.sections[sectionIndex]);
+                }
+            }
+
+            return song;
+        }
+
+        function DisplaySong(song) {
+            var html = song.sections.reduce(function (songHtml, section) {
+
+                if (section.repeatValue) {
+                    songHtml += "<div class=\"repeatedSection\"><span class=\"repeatedSection\">" + section.repeatValue + "</span>";
+                }
+
+                songHtml += "<div class=\"section\">" +
+                section.verseLines.map(function(verseLine){
+                    var comment = "";
+                    if (verseLine.comment) {
+                        comment = "<note>" + verseLine.comment + "</note>"
+                    }
+
+                    if (verseLine.chords.length == 0) {
+                        return "<span>" + comment + verseLine.rawLine + "</span>";
+                    } else {
+                        var collapsedChords = verseLine.chords.map(function (chord) { return chord.value; }).join("&nbsp;");
+                        var hasLyrics = verseLine.lyrics.trim().length > 0;
+                        var chordClass = "chord" + (hasLyrics ? " raisedChord" : "");
+
+                        var inplaceChords = verseLine.chords.slice().reverse().reduce(function (lyrics, chord) {
+                            var before = lyrics.substr(0, chord.index);
+                            var after = lyrics.substr(chord.index);
+                            var systemChord = chord.value;
+                            systemChord = systemChord.replace("H", "B");
+
+                            var chordIndex = allChords.indexOf(systemChord[0]);
+                            if ( chordIndex >= 0 ) {
+                                systemChord = systemChord.replace(systemChord[0], allChords[(chordIndex + transposeOffset) % allChords.length]);
+                            }
+
+                            return before + "<em class=\"" + chordClass + " inplaceChord\">" + systemChord + "</em>" + after;
+                        }, verseLine.lyrics);
+
+                        return "<span class=\"" + (hasLyrics ? "songline" : "") + "\">" + comment + "<em class=\"" + chordClass + " collapsedChords\">" + collapsedChords + "</em>" + inplaceChords + "</span>";
+                    }
+                })
+                .reduce(function (sectionHtml, verseLineHtml) {
+                    return sectionHtml + verseLineHtml + "<br />";
+                }, "") + "</div>";
+
+                if (section.repeatValue) {
+                    songHtml += "</div>";
+                }
+
+                return songHtml;
+            }, "");
+
+			var songDisplay = document.getElementById('songDisplay');
+			songDisplay.innerHTML = html;
+
+			SetChordMode(chordMode);
+        }
+
+        function SetColumnCount(columnCount) {
+            var songDisplay = document.getElementById('songDisplay');
+            songDisplay.style.webkitColumnCount = columnCount;
+            songDisplay.style.columnCount = columnCount;
+            songDisplay.style.mozColumnCount = columnCount;
+        }
+
+        function SetZoom(zoom) {
+            var songDisplay = document.getElementById('songDisplay');
+            songDisplay.style.fontSize = zoom;
+        }
+
+        function SetChordMode(mode) {
+            chordMode = mode;
+
+            if (chordMode == "in place") {
+                var es = document.getElementsByClassName('collapsedChords');
+                for ( var i = 0; i < es.length; ++i) {
+                    es[i].style.display = "none";
+                }
+
+                es = document.getElementsByClassName('inplaceChord');
+                for ( var i = 0; i < es.length; ++i) {
+                    es[i].style.display = "";
+                }
+            }
+
+            if (chordMode == "collapsed") {
+                var es = document.getElementsByClassName('collapsedChords');
+                for (var i = 0; i < es.length; ++i) {
+                    es[i].style.display = "";
+                }
+
+                es = document.getElementsByClassName('inplaceChord');
+                for (var i = 0; i < es.length; ++i) {
+                    es[i].style.display = "none";
+                }
+            }
+        }
+
+		
+		function downloadFile()
+		{
+			window.location.href = "data:text/plain,indhold i tekstfile";
+		}
+    </script>
+</head>
+<body onload="OnLoad()">
+    <input type="file" id="files" name="files[]" multiple />
+    <select id="selSongs" onchange="OnSongSelected(this.value)"></select>
+    <span>Cols:
+        <a href="#" class="display-control" onclick="downloadFile()">TEST</a>
+	
+        <a href="#" class="display-control" onclick="SetColumnCount(1)">1</a>
+        <a href="#" class="display-control" onclick="SetColumnCount(2)">2</a>
+        <a href="#" class="display-control" onclick="SetColumnCount(3)">3</a>
+        <a href="#" class="display-control" onclick="SetColumnCount(4)">4</a>
+
+        Zoom:
+        <a href="#" class="display-control" onclick="SetZoom('90%')">90%</a>
+        <a href="#" class="display-control" onclick="SetZoom('100%')">100%</a>
+        <a href="#" class="display-control" onclick="SetZoom('125%')">125%</a>
+        <a href="#" class="display-control" onclick="SetZoom('150%')">150%</a>
+        <a href="#" class="display-control" onclick="SetZoom('175%')">175%</a>
+        <a href="#" class="display-control" onclick="SetZoom('200%')">200%</a>
+
+        Chords:
+        <a href="#" class="display-control" onclick="SetChordMode('in place')">In-place</a>
+        <a href="#" class="display-control" onclick="SetChordMode('collapsed')">Collapsed</a>
+		
+		Transpose:
+		<select id="selTransposeOffset" onchange="OnTransposeSelected(this.value)">
+		</select>
+    </span>
+    <span id="info"></span>
+        <pre id="songDisplay" class="reading-canvas">
+        </pre>
+</body>
+</html>
