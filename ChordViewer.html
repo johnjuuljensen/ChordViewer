@@ -18,16 +18,34 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
       href="guitar.png">
     <title></title>
     <style>
+        html {
+            height: 100%;
+            margin:0;
+            padding: 0;
+        }
+
         body {
+            height: 100%;
+            margin:0;
+            padding:0;
             font-family: Calibri, sans-serif;
             font-size: 100%;
         }
 
+        .menu {
+            margin-left: 2em;
+            position: absolute;
+            background-color: white;
+            z-index:100;
+        }
+
         .reading-canvas {
             font-size: 150%;
-            padding: 1em;
+            margin: 0;
+            padding: 0;
+            padding-left: 1em;
             max-width: none;
-            height: 90vh;
+            height: 90%;
 
             -moz-column-fill: auto;
             -moz-column-width: 25em;
@@ -50,6 +68,10 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
             -webkit-column-rule-width: 1px;
             -webkit-column-rule-color: white;
             -webkit-box-sizing: border-box;
+        }
+
+        .footer {
+            height: 10%;
         }
 
         .section {
@@ -120,12 +142,14 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 
             document.getElementById('files').addEventListener('change', handleFileSelect, false);
 
+            SetColumnCount(2);
+            SetZoom(150);
 
-            DisplaySong( [
+            DisplaySong( ParseSong( [
 '{title:Hestevisen}',
 '{artist:Magtens Korridor}',
 '   ',
-'{//:comment:}   ',
+'{//:comment:}',
 '{//:inlinecomment:}[G]Op på [D]hesten og [Am]langt ud i [Em]skoven ',
 '[G]rider du a[D]lene på din [Am]hest [C] ',
 '[G]bange, du [D]vender dig om og ser til[Am]bage, aaa[Em]haaa',
@@ -152,7 +176,7 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 '[G]grødkvalt, du [D]vender dig om og ser til[Am]bage [Em]',
 '[G]HURRA! -jeg er a[D]lene med min [Am]hingst, hingst, [C]hingst, hingst',
 '',
-'{|:x3}{repeat:omkvæd}'].join("\n"));
+'{|:x3}{repeat:omkvæd}'].join("\n")));
         }
 
         var songsLoaded = {};
@@ -220,6 +244,7 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
                 }
             }
 
+            ToggleMenu(false);
             DisplaySong(song);
         }
 
@@ -509,11 +534,14 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
             songDisplay.style.webkitColumnCount = columnCount;
             songDisplay.style.columnCount = columnCount;
             songDisplay.style.mozColumnCount = columnCount;
+
+            document.getElementById('columnCount').innerText = columnCount;
         }
 
         function SetZoom(zoom) {
             var songDisplay = document.getElementById('songDisplay');
-            songDisplay.style.fontSize = zoom;
+            songDisplay.style.fontSize = zoom + "%";
+            document.getElementById('zoom').innerText = zoom + "%";
         }
 
         function SetChordMode(mode) {
@@ -549,37 +577,96 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 		{
 			window.location.href = "data:text/plain,indhold i tekstfile";
 		}
+
+		function ToggleMenu(open) {
+		    var menu = document.getElementById('menu');
+
+		    if (open != undefined) {
+		        menu.style.display = open ? "" : "none";
+		    } else {
+		        menu.style.display = (menu.style.display == "none") ? "" : "none";
+		    }
+		}
+
+		function OnKeyPress(e) {
+
+		    if (e.charCode == 44 || e.charCode == 46 ) {
+		        var selSongs = document.getElementById('selSongs');
+		        var offset = e.charCode - 45;
+		        selSongs.selectedIndex = selSongs.selectedIndex + offset;
+		        OnSongSelected(selSongs.options[selSongs.selectedIndex].value);
+		    }
+
+		    if (e.charCode >= 49 && e.charCode <= 53) {
+		        SetColumnCount(e.charCode - 49 + 1);
+		    }
+
+		    if (e.charCode == 43 || e.charCode == 45) {
+		        var offset = -(e.charCode - 44) * 10;
+		        var songDisplay = document.getElementById('songDisplay');
+		        SetZoom(parseInt(songDisplay.style.fontSize, 10) + offset);
+
+		    }
+
+		    if (e.charCode >= 97 && e.charCode <= 103) {
+		        SetColumnCount(e.charCode - 49 + 1);
+
+		        OnTransposeSelected(this.value)
+		    }
+
+
+
+		    //ctrlKey
+		    //charCode
+
+		    //o 111
+            //. 46
+            //, 44
+
+            //+ 43
+            //- 45
+
+		    //a 97
+		    //b 98
+		    //c 99
+		    //d 100
+		    //e 101 
+		    //f 102
+		    //g 103
+
+		    //A 65
+
+		    //0 48
+		    //1 49
+
+		}
     </script>
 </head>
-<body onload="OnLoad()">
-    <input type="file" id="files" name="files[]" multiple />
-    <select id="selSongs" onchange="OnSongSelected(this.value)"></select>
-    <span>Cols:
-        <a href="#" class="display-control" onclick="downloadFile()">TEST</a>
-	
-        <a href="#" class="display-control" onclick="SetColumnCount(1)">1</a>
-        <a href="#" class="display-control" onclick="SetColumnCount(2)">2</a>
-        <a href="#" class="display-control" onclick="SetColumnCount(3)">3</a>
-        <a href="#" class="display-control" onclick="SetColumnCount(4)">4</a>
+<body onload="OnLoad()" onkeypress="OnKeyPress(event)">
+    <div style="height:100%">
+        <a href="#" onclick="ToggleMenu();return false" style="position:absolute">(M)</a>
+        <div id="menu" class="menu">
+            <input type="file" id="files" name="files[]" multiple />
+            <select id="selSongs" onchange="OnSongSelected(this.value)"></select>
+            <span>Cols: <span id="columnCount"></span>
 
-        Zoom:
-        <a href="#" class="display-control" onclick="SetZoom('90%')">90%</a>
-        <a href="#" class="display-control" onclick="SetZoom('100%')">100%</a>
-        <a href="#" class="display-control" onclick="SetZoom('125%')">125%</a>
-        <a href="#" class="display-control" onclick="SetZoom('150%')">150%</a>
-        <a href="#" class="display-control" onclick="SetZoom('175%')">175%</a>
-        <a href="#" class="display-control" onclick="SetZoom('200%')">200%</a>
+                Zoom: <span id="zoom"></span>
 
-        Chords:
-        <a href="#" class="display-control" onclick="SetChordMode('in place')">In-place</a>
-        <a href="#" class="display-control" onclick="SetChordMode('collapsed')">Collapsed</a>
+                Chords:
+                <a href="#" class="display-control" onclick="SetChordMode('in place')">In-place</a>
+                <a href="#" class="display-control" onclick="SetChordMode('collapsed')">Collapsed</a>
 		
-		Transpose:
-		<select id="selTransposeOffset" onchange="OnTransposeSelected(this.value)">
-		</select>
-    </span>
-    <span id="info"></span>
+		        Transpose:
+		        <select id="selTransposeOffset" onchange="OnTransposeSelected(this.value)">
+		        </select>
+            </span>
+        </div>
+
         <pre id="songDisplay" class="reading-canvas">
         </pre>
+        <div id="chordDiagrams" class="footer">
+            test test test
+        </div>
+    </div>
 </body>
 </html>
