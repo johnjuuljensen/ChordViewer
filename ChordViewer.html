@@ -45,7 +45,7 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
             padding: 0;
             padding-left: 1em;
             max-width: none;
-            height: 90%;
+            height: 80%;
 
             -moz-column-fill: auto;
             -moz-column-width: 25em;
@@ -71,7 +71,7 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
         }
 
         .footer {
-            height: 10%;
+            height: 20%;
         }
 
         .section {
@@ -129,6 +129,29 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
         pre {
             font-family: Consolas;
         }
+
+        table.chordDiagram {
+            border-spacing: 0;
+            display: inline-table;
+            padding-left: 1em;
+            font-family: Consolas;
+        }
+        table.chordDiagram th {
+            margin: 0;
+            padding: 2px;
+            border: 0;
+            border-right: 1px solid black;
+        }
+        table.chordDiagram th.fret {
+            border-bottom: 1px solid black;
+        }
+        table.chordDiagram td {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            border-right: 1px solid black;
+            text-decoration: line-through;
+        }
     </style>
 
     <script type="text/javascript">
@@ -145,7 +168,15 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
             SetColumnCount(2);
             SetZoom(150);
 
-            DisplaySong( ParseSong( [
+            var song = ParseSong([
+'{//:&nbsp;}',
+'{//:Shortcuts:}',
+'{//:M toggles menu}',
+'{//:+/- changes zoom level}',
+'{//:1-5 selects number of columns}',
+'{//:A-G changes key}',
+'{//:. navigates to next loaded song}',
+'{//:, navigates to previous song}',
 '{title:Hestevisen}',
 '{artist:Magtens Korridor}',
 '   ',
@@ -176,14 +207,53 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 '[G]grødkvalt, du [D]vender dig om og ser til[Am]bage [Em]',
 '[G]HURRA! -jeg er a[D]lene med min [Am]hingst, hingst, [C]hingst, hingst',
 '',
-'{|:x3}{repeat:omkvæd}'].join("\n")));
+'{|:x3}{repeat:omkvæd}'].join("\n"));
+
+            SetupTransposition(song);
+            DisplaySong(song);
         }
 
         var songsLoaded = {};
         var currentSongKey;
         var chordMode = "in place";
         var transposeOffset = 0;
-        var allChords = ["A", "B", "C", "D", "E", "F", "G"];
+        var baseChords = ["A", "B", "C", "D", "E", "F", "G"];
+        var transpositionOffsets = null;
+        var allChords = {
+            A: ["x02220", "577655"],
+            B: ["x24442"],
+            C: ["x32010", "8AA988"],
+            D: ["xx0232"],
+            E: ["022100"],
+            F: ["133211"],
+            G: ["320003", "355433"],
+
+            Am: ["X02210"],
+            Cm: ["x35543"],
+            Dm: ["XX0231", "X57765"],
+            Em: ["022000"],
+            Fm: ["133111"],
+            Gm: ["355333"],
+
+            A7: ["X02020"],
+            B7: ["X21202"],
+            C7: ["x32310"],
+            D7: ["XX0212"],
+            E7: ["020100"],
+            G7: ["320001"],
+
+            Am7: ["X02010"],
+            Bm7: ["X20202"],
+            Dm7: ["XX0211"],
+            Em7: ["020000"],
+
+            Amaj7: ["X02120"],
+            Cmaj7: ["X32000"],
+            Dmaj7: ["XX0222"],
+            Emaj7: ["021100"],
+            Fmaj7: ["103210"],
+            Gmaj7: ["320002"]
+        }
 
         function handleFileSelect(evt) {
             var files = evt.target.files; // FileList object
@@ -224,26 +294,34 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
             DisplaySong(song);
         }
 
+        function SetupTransposition(song) {
+            var selTransposeOffset = document.getElementById('selTransposeOffset');
+            selTransposeOffset.innerHTML = "<option value='0'></option>";
+            transposeOffset = 0;
+            song.transpositionOffsets = null;
+
+            if (song.usedChords.length > 0) {
+                transpositionOffsets = {};
+                var firstBaseChord = song.usedChords[0][0];
+                var firstChordIndex = baseChords.indexOf(firstBaseChord);
+                for (var i = 0; i < baseChords.length; ++i) {
+                    var transposedChord = baseChords[(firstChordIndex + i) % baseChords.length];
+                    transpositionOffsets[transposedChord] = i;
+                    if (i > 0) {
+                        var opt = document.createElement('option');
+                        opt.value = i;
+                        opt.innerHTML = firstBaseChord + "->" + transposedChord;
+                        selTransposeOffset.appendChild(opt);
+                    }
+                }
+            }
+        }
+
         function OnSongSelected(songKey) {
             currentSongKey = songKey;
             var songText = songsLoaded[songKey];
             var song = ParseSong(songText);
-
-            var selTransposeOffset = document.getElementById('selTransposeOffset');
-            selTransposeOffset.innerHTML = "<option value='0'></option>";
-            transposeOffset = 0;
-
-            if (song.firstChord) {
-                var firstBaseChord = song.firstChord.value[0];
-                var firstChordIndex = allChords.indexOf(firstBaseChord);
-                for (var i = 1; i < allChords.length; ++i) {
-                    var opt = document.createElement('option');
-                    opt.value = i;
-                    opt.innerHTML = firstBaseChord + "->" + allChords[(firstChordIndex + i) % allChords.length];
-                    selTransposeOffset.appendChild(opt);
-                }
-            }
-
+            SetupTransposition(song);
             ToggleMenu(false);
             DisplaySong(song);
         }
@@ -253,7 +331,7 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
             this.directives = {};
             this.namedSections = {};
             this.sections = [];
-            this.firstChord = null;
+            this.usedChords = [];
 
             this.lastSection = function() {
                 return this.sections[this.sections.length-1];
@@ -382,8 +460,9 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
                 var chord = new Chord(chordMatch[1], chordMatch.index);
                 verseLine.chords.push(chord);
                 rawLine = rawLine.substr(0, chord.index) + rawLine.substr(chord.index + chord.value.length + 2);
-                if (!currentSection.song.firstChord) {
-                    currentSection.song.firstChord = chord;
+
+                if (currentSection.song.usedChords.indexOf(chord.value) == -1) {
+                    currentSection.song.usedChords.push(chord.value);
                 }
             }
 
@@ -430,13 +509,6 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
                         var before = crdLine.substr(0, chordMatch.index);
                         var after = crdLine.substr(chordMatch.index);
                         var systemChord = chordMatch[0];
-                        //systemChord = systemChord.replace("H", "B");
-
-
-                        //var chordIndex = allChords.indexOf(systemChord[0]);
-                        //if ( chordIndex >= 0 ) {
-                        //    systemChord = systemChord.replace(systemChord[0], allChords[(chordIndex + transposeOffset) % allChords.length]);
-                        //}
 
                         return before + "[" + systemChord + "]" + after;
                     }, lyricsLine);
@@ -501,9 +573,9 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
                             var systemChord = chord.value;
                             systemChord = systemChord.replace("H", "B");
 
-                            var chordIndex = allChords.indexOf(systemChord[0]);
+                            var chordIndex = baseChords.indexOf(systemChord[0]);
                             if ( chordIndex >= 0 ) {
-                                systemChord = systemChord.replace(systemChord[0], allChords[(chordIndex + transposeOffset) % allChords.length]);
+                                systemChord = systemChord.replace(systemChord[0], baseChords[(chordIndex + transposeOffset) % baseChords.length]);
                             }
 
                             return before + "<em class=\"" + chordClass + " inplaceChord\">" + systemChord + "</em>" + after;
@@ -526,8 +598,93 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 			var songDisplay = document.getElementById('songDisplay');
 			songDisplay.innerHTML = html;
 
-			SetChordMode(chordMode);
+			ToggleChordMode(chordMode);
+
+			var chordDiagrams = document.getElementById('chordDiagrams');
+
+			var renderedDiagrams = "";
+
+			for (chordIndex in song.usedChords) {
+			    var chord = song.usedChords[chordIndex];
+			    if (allChords[chord]) {
+			        renderedDiagrams += RenderChordDiagram(chord, allChords[chord][0]);
+			    }
+			}
+
+			chordDiagrams.innerHTML = renderedDiagrams;
         }
+
+        function RenderChordDiagram(chordName,pattern) {
+            if ( pattern.length != 6 ) {
+                throw "invalid chord pattern:" + pattern;
+            }
+
+            var minFret = 16;
+            var maxFret = 1;
+
+            var temp = [];
+            for (var i = 0; i < 6; ++i) {
+                if (/[0-9A-F]/.test(pattern[i])) {
+                    temp.push(parseInt(pattern[i], 16));
+                } else {
+                    temp.push(null);
+                }
+            }
+
+            pattern = temp;
+
+            pattern.forEach(function (value) {
+                if (value > 0) {
+                    minFret = value < minFret ? value : minFret;
+                    maxFret = value > maxFret ? value : maxFret;
+                }
+            });
+
+            if ( maxFret - minFret < 3 ) {
+                minFret = maxFret - 2;
+            }
+
+            if (minFret < 1) {
+                minFret = 1;
+            }
+
+            if (maxFret - minFret < 3) {
+                maxFret = minFret + 2;
+            }
+
+            var diagram = "<table class=\"chordDiagram\">";
+            diagram += "<tr><th class=\"fret\">" + chordName + "</th>";
+            for ( var fret = minFret; fret <= maxFret; ++fret ) {
+                diagram += "<th class=\"fret\">" + fret + "</th>";
+            }
+            diagram += "</tr>";
+
+            var strings = "EADGBE";
+
+            for ( var i = 5; i >= 0; --i ) {
+                diagram += "<tr><th>" + strings[i] + "</th>";
+                var stringFret = pattern[i];
+
+                for ( var fret = minFret; fret <= maxFret; ++fret ) {
+
+                    var marker = "&nbsp;";
+                    if (stringFret == null) {
+                        marker = "X";
+                    } else if ( stringFret == fret ) {
+                        marker = "O";
+                    }
+
+                    diagram += "<td>&nbsp;" + marker + "&nbsp;</td>";
+                }
+                diagram += "</tr>";
+            }
+
+            diagram += "</table>";
+
+            return diagram;
+        }
+
+
 
         function SetColumnCount(columnCount) {
             var songDisplay = document.getElementById('songDisplay');
@@ -544,8 +701,14 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
             document.getElementById('zoom').innerText = zoom + "%";
         }
 
-        function SetChordMode(mode) {
-            chordMode = mode;
+        function ToggleChordMode(mode) {
+            if (mode) {
+                chordMode = mode;
+            } else if (chordMode == "in place") {
+                chordMode = "collapsed";
+            } else {
+                chordMode = "in place";
+            }
 
             if (chordMode == "in place") {
                 var es = document.getElementsByClassName('collapsedChords');
@@ -570,6 +733,8 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
                     es[i].style.display = "none";
                 }
             }
+
+            document.getElementById('chordMode').innerText = chordMode;
         }
 
 		
@@ -608,37 +773,16 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 
 		    }
 
-		    if (e.charCode >= 97 && e.charCode <= 103) {
-		        SetColumnCount(e.charCode - 49 + 1);
-
-		        OnTransposeSelected(this.value)
+		    if ((e.charCode >= 97 && e.charCode <= 103 ||
+                e.charCode >= 65 && e.charCode <= 71) &&
+                transpositionOffsets) {
+		        var transposeChord = String.fromCharCode(e.charCode).toUpperCase();
+		        OnTransposeSelected(transpositionOffsets[transposeChord]);
 		    }
 
-
-
-		    //ctrlKey
-		    //charCode
-
-		    //o 111
-            //. 46
-            //, 44
-
-            //+ 43
-            //- 45
-
-		    //a 97
-		    //b 98
-		    //c 99
-		    //d 100
-		    //e 101 
-		    //f 102
-		    //g 103
-
-		    //A 65
-
-		    //0 48
-		    //1 49
-
+		    if (String.fromCharCode(e.charCode).toUpperCase() == "M") {
+		        ToggleMenu();
+		    }
 		}
     </script>
 </head>
@@ -648,13 +792,11 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
         <div id="menu" class="menu">
             <input type="file" id="files" name="files[]" multiple />
             <select id="selSongs" onchange="OnSongSelected(this.value)"></select>
-            <span>Cols: <span id="columnCount"></span>
+            <span>Cols: <span id="columnCount"></span>,
 
-                Zoom: <span id="zoom"></span>
+                Zoom: <span id="zoom"></span>,
 
-                Chords:
-                <a href="#" class="display-control" onclick="SetChordMode('in place')">In-place</a>
-                <a href="#" class="display-control" onclick="SetChordMode('collapsed')">Collapsed</a>
+                <a href="#" onclick="ToggleChordMode()">Chord mode: <span id="chordMode"></span></a>,
 		
 		        Transpose:
 		        <select id="selTransposeOffset" onchange="OnTransposeSelected(this.value)">
@@ -665,7 +807,15 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
         <pre id="songDisplay" class="reading-canvas">
         </pre>
         <div id="chordDiagrams" class="footer">
-            test test test
+            <table class="chordDiagram">
+                <tr><th class="fret">D7</th><th class="fret">1</th><th class="fret">2</th><th class="fret">3</th></tr>
+                <tr><th>E</th><td>&nbsp;&nbsp;0&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
+                <tr><th>A</th><td>&nbsp;&nbsp;0&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
+                <tr><th>D</th><td>&nbsp;&nbsp;0&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
+                <tr><th>G</th><td>&nbsp;&nbsp;0&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
+                <tr><th>B</th><td>&nbsp;&nbsp;0&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
+                <tr><th>E</th><td>&nbsp;&nbsp;0&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
+            </table>
         </div>
     </div>
 </body>
