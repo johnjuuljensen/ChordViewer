@@ -45,7 +45,7 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
             padding: 0;
             padding-left: 1em;
             max-width: none;
-            height: 80%;
+            height: 100%;
 
             -moz-column-fill: auto;
             -moz-column-width: 25em;
@@ -130,22 +130,22 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
             font-family: Consolas;
         }
 
-        table.chordDiagram {
+        table.chordPictogram {
             border-spacing: 0;
             display: inline-table;
             padding-left: 1em;
             font-family: Consolas;
         }
-        table.chordDiagram th {
+        table.chordPictogram th {
             margin: 0;
             padding: 2px;
             border: 0;
             border-right: 1px solid black;
         }
-        table.chordDiagram th.fret {
+        table.chordPictogram th.fret {
             border-bottom: 1px solid black;
         }
-        table.chordDiagram td {
+        table.chordPictogram td {
             margin: 0;
             padding: 0;
             border: 0;
@@ -175,6 +175,7 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 '{//:+/- changes zoom level}',
 '{//:1-5 selects number of columns}',
 '{//:A-G changes key}',
+'{//:P toggles chord pictogrms}',
 '{//:. navigates to next loaded song}',
 '{//:, navigates to previous song}',
 '{title:Hestevisen}',
@@ -600,21 +601,21 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 
 			ToggleChordMode(chordMode);
 
-			var chordDiagrams = document.getElementById('chordDiagrams');
+			var chordPictograms = document.getElementById('chordPictograms');
 
-			var renderedDiagrams = "";
+			var renderedPictograms = "";
 
 			for (chordIndex in song.usedChords) {
 			    var chord = song.usedChords[chordIndex];
 			    if (allChords[chord]) {
-			        renderedDiagrams += RenderChordDiagram(chord, allChords[chord][0]);
+			        renderedPictograms += RenderChordPictogram(chord, allChords[chord][0]);
 			    }
 			}
 
-			chordDiagrams.innerHTML = renderedDiagrams;
+			chordPictograms.innerHTML = renderedPictograms;
         }
 
-        function RenderChordDiagram(chordName,pattern) {
+        function RenderChordPictogram(chordName,pattern) {
             if ( pattern.length != 6 ) {
                 throw "invalid chord pattern:" + pattern;
             }
@@ -652,17 +653,17 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
                 maxFret = minFret + 2;
             }
 
-            var diagram = "<table class=\"chordDiagram\">";
-            diagram += "<tr><th class=\"fret\">" + chordName + "</th>";
+            var pictogram = "<table class=\"chordPictogram\">";
+            pictogram += "<tr><th class=\"fret\">" + chordName + "</th>";
             for ( var fret = minFret; fret <= maxFret; ++fret ) {
-                diagram += "<th class=\"fret\">" + fret + "</th>";
+                pictogram += "<th class=\"fret\">" + fret + "</th>";
             }
-            diagram += "</tr>";
+            pictogram += "</tr>";
 
             var strings = "EADGBE";
 
             for ( var i = 5; i >= 0; --i ) {
-                diagram += "<tr><th>" + strings[i] + "</th>";
+                pictogram += "<tr><th>" + strings[i] + "</th>";
                 var stringFret = pattern[i];
 
                 for ( var fret = minFret; fret <= maxFret; ++fret ) {
@@ -674,14 +675,14 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
                         marker = "O";
                     }
 
-                    diagram += "<td>&nbsp;" + marker + "&nbsp;</td>";
+                    pictogram += "<td>&nbsp;" + marker + "&nbsp;</td>";
                 }
-                diagram += "</tr>";
+                pictogram += "</tr>";
             }
 
-            diagram += "</table>";
+            pictogram += "</table>";
 
-            return diagram;
+            return pictogram;
         }
 
 
@@ -753,6 +754,18 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 		    }
 		}
 
+		function ToggleChordPictograms(open) {
+		    var chordPictograms = document.getElementById('chordPictograms');
+
+		    if (open == undefined) {
+		        open = chordPictograms.style.display == "none";
+		    }
+
+		    chordPictograms.style.display = open ? "" : "none";
+
+		    document.getElementById('songDisplay').style.height = open ? "80%" : "100%";
+        }
+
 		function OnKeyPress(e) {
 
 		    if (e.charCode == 44 || e.charCode == 46 ) {
@@ -783,7 +796,11 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 		    if (String.fromCharCode(e.charCode).toUpperCase() == "M") {
 		        ToggleMenu();
 		    }
-		}
+
+		    if (String.fromCharCode(e.charCode).toUpperCase() == "P") {
+		        ToggleChordPictograms();
+		    }
+        }
     </script>
 </head>
 <body onload="OnLoad()" onkeypress="OnKeyPress(event)">
@@ -806,16 +823,7 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 
         <pre id="songDisplay" class="reading-canvas">
         </pre>
-        <div id="chordDiagrams" class="footer">
-            <table class="chordDiagram">
-                <tr><th class="fret">D7</th><th class="fret">1</th><th class="fret">2</th><th class="fret">3</th></tr>
-                <tr><th>E</th><td>&nbsp;&nbsp;0&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
-                <tr><th>A</th><td>&nbsp;&nbsp;0&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
-                <tr><th>D</th><td>&nbsp;&nbsp;0&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
-                <tr><th>G</th><td>&nbsp;&nbsp;0&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
-                <tr><th>B</th><td>&nbsp;&nbsp;0&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
-                <tr><th>E</th><td>&nbsp;&nbsp;0&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
-            </table>
+        <div id="chordPictograms" class="footer" style="display:none">
         </div>
     </div>
 </body>

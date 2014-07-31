@@ -86,9 +86,7 @@ Future plans:
 - Better UI
 - Appending loaded files instead of replacing already loaded files.
 - Export song with chords on seperate lines as crd format and vice versa
-- Visualizing the chords used in a song
-- Add keyboard commands
-
+- Support transposition in chord diagrams
 
 
 
