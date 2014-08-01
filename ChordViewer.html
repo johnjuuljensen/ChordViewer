@@ -330,9 +330,9 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
             ParseAndDisplaySongText(songText,songKey);
         }
 
-        function ParseAndDisplaySongText(songText,songKey) {
+        function ParseAndDisplaySongText(songText,filename) {
             currentSong = ParseSong(songText);
-            currentSong.directives.songKey = songKey;
+            currentSong.directives.filename = filename;
             SetupTransposition(currentSong);
             ToggleMenu(false);
             DisplaySong(currentSong);
@@ -608,9 +608,9 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
                 return songHtml;
             }, "");
 
-            var title = song.directives.songKey;
+            var title = song.directives.filename;
             if (title) {
-                title = details.replace(".txt", "").replace(".crd", "");
+                title = title.replace(".txt", "").replace(".crd", "");
             }
             if (song.directives.artist || song.directives.title) {
                 title = "";
