@@ -15,7 +15,11 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
     <meta charset="utf-8" />
 	<link rel="icon" 
       type="image/png" 
-      href="guitar.png">
+      href="guitar.png" />
+    <link rel="stylesheet" type="text/css" href="ChordDisplay.css" />
+    <link rel="stylesheet" type="text/css" href="ChordPictogram.css" />
+    <link rel="stylesheet" type="text/css" href="ChordViewer-Theme-Default.css" title="default" />
+    <link rel="alternate stylesheet" type="text/css" href="ChordViewer-Theme-Black.css" title="black" />
     <title></title>
     <style>
         html {
@@ -32,10 +36,6 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
             font-size: 100%;
         }
 
-        h1 {
-            font-size: 100%;
-        }
-
         .menu {
             margin-left: 2em;
             position: absolute;
@@ -43,121 +43,9 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
             z-index:100;
         }
 
-        .reading-canvas {
-            font-size: 150%;
-            margin: 0;
-            padding: 0;
-            padding-left: 1em;
-            max-width: none;
-            height: 97%;
-
-            -moz-column-fill: auto;
-            -moz-column-width: 25em;
-            -moz-column-gap: 3rem;
-            -moz-box-sizing: border-box;
-
-            column-fill: auto;
-            column-count: 2;
-            column-gap: 3rem;
-            column-rule-style: solid;
-            column-rule-width: 1px;
-            column-rule-color: white;
-            box-sizing: border-box;
-     
-            -webkit-column-fill: auto;
-            -webkit-column-count: 2;
-            -webkit-column-width: 25em;
-            -webkit-column-gap: 3rem;
-            -webkit-column-rule-style: solid;
-            -webkit-column-rule-width: 1px;
-            -webkit-column-rule-color: white;
-            -webkit-box-sizing: border-box;
-        }
-
         .footer {
             height: 3%;
             overflow: hidden;
-        }
-
-        .section {
-           -webkit-column-break-inside:avoid;
-            -moz-column-break-inside:avoid;
-            column-break-inside:avoid;
-            margin-bottom:1.5em;
-            padding-left: 0.2em;
-        }
-
-        div.repeatedSection {
-           -webkit-column-break-inside:avoid;
-            -moz-column-break-inside:avoid;
-            column-break-inside:avoid;
-            border-left: 2px solid gold;
-
-        }
-
-        span.repeatedSection {
-            font-size: 75%
-        }
-
-        .raisedChord {
-            display: inline-flex;
-            display: -ms-inline-grid;
-            margin-bottom: 0.9em;
-            width: 0px;
-        }
-
-        .chord {
-            color: blue;
-            font-size:90%;
-        }
-
-        .collapsedChords {
-        }
-
-        .inplaceChord {
-        }
-
-        .songline {
-            position: relative;
-            vertical-align: bottom;
-        }
-
-        note {
-            color: lightgreen;
-            vertical-align: bottom;
-        }
-
-        .display-control {
-            padding-right: 1em;
-        }
-
-        pre {
-            font-family: Consolas;
-        }
-
-        table.chordPictogram {
-            border-spacing: 0;
-            display: inline-table;
-            padding-right: 1em;
-            font-family: Consolas;
-        }
-        table.chordPictogram th {
-            margin: 0;
-            border: 0;
-            padding: 0;
-            padding-right: 2px;
-            border-right: 1px double black;
-        }
-        table.chordPictogram th.fret {
-            border-bottom: 1px solid black;
-            padding: 2px;
-        }
-        table.chordPictogram td {
-            margin: 0;
-            padding: 0;
-            border: 0;
-            border-right: 2px solid black;
-            text-decoration: line-through;
         }
 
         #chordPictograms {
@@ -811,7 +699,41 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 
 		    document.getElementById('songDisplay').style.height = open ? "85%" : "97%";
 		    footer.style.height = open ? "15%" : "3%";
-        }
+		}
+
+		function CycleTheme() {
+		    var linkElements = document.getElementsByTagName("link");
+
+		    var links = [];
+		    for (var i = 0; i < linkElements.length; ++i) {
+		        links.push(linkElements[i]);
+		    }
+		    
+		    links = links.filter(function (link, index) {
+		        return link.rel.indexOf("stylesheet") != -1 && link.title;
+		    });
+
+		    var activeTitle;
+		    var uniqueTitles = [];
+
+		    links.forEach(function (link, index) {
+		        if ( !activeTitle && !link.disabled) {
+		            activeTitle = link.title;
+		        }
+
+		        if (uniqueTitles.indexOf(link.title) == -1) {
+		            uniqueTitles.push(link.title);
+		        }
+		    });
+
+		    var activeIndex = uniqueTitles.indexOf(activeTitle);
+		    var nextIndex = (activeIndex + 1) % uniqueTitles.length;
+		    var nextTitle = uniqueTitles[nextIndex];
+
+		    links.forEach(function (link, index) {
+		        link.disabled = link.title!=nextTitle;
+		    });
+		}
 
 		function OnKeyPress(e) {
 
@@ -846,6 +768,10 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 
 		    if (String.fromCharCode(e.charCode).toUpperCase() == "P") {
 		        ToggleChordPictograms();
+		    }
+
+		    if (String.fromCharCode(e.charCode).toUpperCase() == "T") {
+		        CycleTheme();
 		    }
         }
     </script>

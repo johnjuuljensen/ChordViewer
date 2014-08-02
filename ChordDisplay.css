@@ -1,0 +1,86 @@
+﻿.reading-canvas {
+    font-size: 150%;
+    margin: 0;
+    padding: 0;
+    padding-left: 1em;
+    max-width: none;
+    height: 97%;
+
+    -moz-column-fill: auto;
+    -moz-column-width: 25em;
+    -moz-column-gap: 3rem;
+    -moz-box-sizing: border-box;
+
+    column-fill: auto;
+    column-count: 2;
+    column-gap: 3rem;
+    column-rule-style: solid;
+    column-rule-width: 1px;
+    column-rule-color: white;
+    box-sizing: border-box;
+     
+    -webkit-column-fill: auto;
+    -webkit-column-count: 2;
+    -webkit-column-width: 25em;
+    -webkit-column-gap: 3rem;
+    -webkit-column-rule-style: solid;
+    -webkit-column-rule-width: 1px;
+    -webkit-column-rule-color: white;
+    -webkit-box-sizing: border-box;
+}
+
+.reading-canvas h1 {
+    font-size: 100%;
+}
+
+.section {
+    -webkit-column-break-inside:avoid;
+    -moz-column-break-inside:avoid;
+    column-break-inside:avoid;
+    margin-bottom:1.5em;
+    padding-left: 0.2em;
+}
+
+div.repeatedSection {
+    -webkit-column-break-inside:avoid;
+    -moz-column-break-inside:avoid;
+    column-break-inside:avoid;
+    border-left: 2px solid gold;
+
+}
+
+span.repeatedSection {
+    font-size: 75%
+}
+
+.raisedChord {
+    display: inline-flex;
+    display: -ms-inline-grid;
+    margin-bottom: 0.9em;
+    width: 0px;
+}
+
+.chord {
+    color: blue;
+    font-size:90%;
+}
+
+.collapsedChords {
+}
+
+.inplaceChord {
+}
+
+.songline {
+    position: relative;
+    vertical-align: bottom;
+}
+
+.reading-canvas note {
+    color: lightgreen;
+    vertical-align: bottom;
+}
+
+pre.reading-canvas {
+    font-family: Consolas;
+}

@@ -1,0 +1,24 @@
+﻿table.chordPictogram {
+    border-spacing: 0;
+    display: inline-table;
+    padding-right: 1em;
+    font-family: Consolas;
+}
+table.chordPictogram th {
+    margin: 0;
+    border: 0;
+    padding: 0;
+    padding-right: 2px;
+    border-right: 1px double black;
+}
+table.chordPictogram th.fret {
+    border-bottom: 1px solid black;
+    padding: 2px;
+}
+table.chordPictogram td {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-right: 2px solid black;
+    text-decoration: line-through;
+}
