@@ -53,10 +53,9 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
         }
     </style>
 
-    <script type="text/javascript" src="AllChordPatterns.js" >
-        </script>
-    <script type="text/javascript" src="CRDParsing.js" >
-        </script>
+    <script type="text/javascript" src="AllChordPatterns.js" ></script>
+    <script type="text/javascript" src="CRDParsing.js" ></script>
+    <script type="text/javascript" src="ParserConfig.js" ></script>
     <script type="text/javascript">
         function OnLoad() {
             // Check for the various File API support.
@@ -161,23 +160,31 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 
         function SetupTransposition(song) {
             var selTransposeOffset = document.getElementById('selTransposeOffset');
-            selTransposeOffset.innerHTML = "<option value='0'></option>";
+            selTransposeOffset.innerHTML = ""; //"<option value='0'></option>";
             transposeOffset = 0;
             song.transpositionOffsets = null;
 
             if (song.usedChords.length > 0) {
                 transpositionOffsets = {};
                 var firstBaseChord = song.usedChords[0][0];
+                var transposeTo = firstBaseChord;
+                if (baseChords.indexOf( song.directives.transposeTo) != -1) {
+                    transposeTo = song.directives.transposeTo;
+                }
+
                 var firstChordIndex = baseChords.indexOf(firstBaseChord);
                 for (var i = 0; i < baseChords.length; ++i) {
                     var transposedChord = baseChords[(firstChordIndex + i) % baseChords.length];
                     transpositionOffsets[transposedChord] = i;
-                    if (i > 0) {
-                        var opt = document.createElement('option');
-                        opt.value = i;
-                        opt.innerHTML = firstBaseChord + "->" + transposedChord;
-                        selTransposeOffset.appendChild(opt);
+                    var opt = document.createElement('option');
+                    opt.value = i;
+                    opt.innerHTML = transposedChord;
+                    if (transposedChord == transposeTo) {
+                        transposeOffset = i;
+                        opt.selected = true;
                     }
+
+                    selTransposeOffset.appendChild(opt);
                 }
             }
         }
@@ -188,7 +195,8 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
         }
 
         function ParseAndDisplaySongText(songText,filename) {
-            currentSong = ParseSong(songText);
+            parserConfig = GetParserConfig();
+            currentSong = ParseSong(songText,parserConfig);
             currentSong.directives.filename = filename;
             SetupTransposition(currentSong);
             ToggleMenu(false);
@@ -287,7 +295,9 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 
 			    var allChordPatterns = GetAllChordPatterns();
 			    var pattern = "??????";
-			    if (allChordPatterns[chordValue]) {
+			    if (song.directives[chordValue] && /^[0-9A-Fa-fXx]{6}$/.test(song.directives[chordValue])) {
+			        pattern = song.directives[chordValue];
+			    } else if (allChordPatterns[chordValue]) {
 			        pattern = allChordPatterns[chordValue][0];
 			    }
 
@@ -539,7 +549,7 @@ OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, D
 
                 <a href="#" onclick="ToggleChordMode()">Chord mode: <span id="chordMode"></span></a>,
 		
-		        Transpose:
+		        Key:
 		        <select id="selTransposeOffset" onchange="OnTransposeSelected(this.value)">
 		        </select>
             </span>

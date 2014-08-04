@@ -61,7 +61,11 @@ Inline chords
 -------------
 
     {title:House of the rising sun}
-     
+	
+	{//:Play it in D, with a lighter F}
+	{transposeTo:D}     
+	{F:X33211}
+	
     {//:This verse is written in CRD inline format}
     My [Am]mother [C]was a [D]tailor. [F]
     She [Am]sewed my [C]new blue [E]jeans. [E]

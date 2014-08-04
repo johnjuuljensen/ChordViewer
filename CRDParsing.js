@@ -39,7 +39,7 @@ function Section(song, repeatValue) {
 
 
 
-function ParseLine(rawLine, currentSection, comment) {
+function ParseLine(rawLine, currentSection, comment, parserConfig) {
     rawLine = rawLine.replace(/\s+$/, "").replace(/^\s+$/, "");
 
     var repeatValue = null;
@@ -51,6 +51,11 @@ function ParseLine(rawLine, currentSection, comment) {
     while (directiveMatch = directivesRegex.exec(rawLine)) {
         var key = directiveMatch[1],
             value = true;
+
+        if (parserConfig.directiveSynonyms[key]) {
+            key = parserConfig.directiveSynonyms[key];
+        }
+
         if (directiveMatch.length > 2) {
             value = directiveMatch[2];
         }
@@ -143,7 +148,7 @@ function ParseLine(rawLine, currentSection, comment) {
 
 
 
-function ConvertSectionToCRD(section) {
+function ConvertSectionToCRD(section,parserConfig) {
     var resultSection = new Section(section.song, section.repeatValue);
 
     var lineCount = section.verseLines.length;
@@ -190,14 +195,14 @@ function ConvertSectionToCRD(section) {
     return resultSection;
 }
 
-function ParseSong(rawSong) {
+function ParseSong(rawSong,parserConfig) {
     var song = new Song();
 
     var currentSection = new Section(song);
     song.sections.push(currentSection);
 
     rawSong.split("\n").forEach(function (e) {
-        currentSection = ParseLine(e, currentSection);
+        currentSection = ParseLine(e, currentSection, null, parserConfig);
     });
 
     var totalChords = song.sections.reduce(function (songChordCount, section) {
@@ -209,7 +214,7 @@ function ParseSong(rawSong) {
     if (totalChords == 0) {
         // Assume that chords are on seperate line
         for (var sectionIndex = 0; sectionIndex < song.sections.length; sectionIndex++) {
-            song.sections[sectionIndex] = ConvertSectionToCRD(song.sections[sectionIndex]);
+            song.sections[sectionIndex] = ConvertSectionToCRD(song.sections[sectionIndex], parserConfig);
         }
     }
 

@@ -28,28 +28,26 @@ Ex: {|:x3}
 Desc: Use for comments.
 Ex: {//:Some comment}
 
+transposeTo
+Desc: Can be used to set a preferred key for a song.
+Ex: {transposeTo:A}
+
+{artist:}
+{subtitle:}
+
+Any chord can be used as a directive with the chord pattern as value, this will override the default pattern used for the pictograms. This can also be used to define patterns for chords unknown to the application.
+
+
 
 CRD proposed directives
 {title:}
-
-{subtitle:}
-
-{artist:}
 
 {end}
 No colon.
 No further processing after this directive. Notes, comments etc. can be placed after this directive.
 
+
+On wikipedia the follwing directives are use:
 {start_of_chorus}{end_of_chorus}
 These seem like weird non-generic directives, not very useful.
 
-{start:}{end:}
-Example: {start:chorus}{end:chorus}
-Defines a named block. 
-Nested blocks are not allowed.
-End block need not include the name, but must include the colon.
-Named blocks can be redefined, so if the chorus changes, then it can be redefined and later repeats will use the new definition.
-
-{repeat:}
-Example: {repeat:chorus}
-Repeat the content from a previous start/end directive pair.
