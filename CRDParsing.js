@@ -153,7 +153,7 @@ function ConvertSectionToCRD(section,parserConfig) {
 
     var lineCount = section.verseLines.length;
     for (var lineIndex = 0; lineIndex < lineCount; lineIndex++) {
-        var chordsRegex = /\b(([A-H](maj|sus2|sus4|#|♯|m|5|7|b|♭|\*)*)(\/)?)+(?=\s|$)/g,
+        var chordsRegex = /(([A-H](#|♯|b|♭)?(m|maj|sus|add|aug|dim|\*)?(2|4|5|6|7|9|11)?)(\/([A-H](#|♯|b|♭)?))?)(?=\s|$|[A-H])/g,
             chordMatch = null,
             verseLine = section.verseLines[lineIndex];
 
